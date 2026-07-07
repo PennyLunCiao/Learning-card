@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学習カード</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #f5f5f0; padding: 20px; }
+
+.top-bar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.lang-switch { display: flex; border-radius: 20px; overflow: hidden; border: 1.5px solid #2c1a0e; }
+.lang-btn { padding: 6px 16px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; background: #fff; color: #2c1a0e; transition: all 0.2s; }
+.lang-btn.active { background: #2c1a0e; color: #fff; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn { padding: 8px 18px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; background: #ddd; color: #666; transition: all 0.2s; }
+.tab-btn.active { background: #2c1a0e; color: #fff; }
+.section { display: none; }
+.section.active { display: block; }
+
+h1 { font-size: 20px; font-weight: 500; margin-bottom: 6px; color: #222; }
+.bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.count { font-size: 13px; color: #666; }
+button.reset { font-size: 13px; padding: 5px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.card-wrap { perspective: 800px; height: 160px; cursor: pointer; }
+.card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s ease; }
+.card-wrap.flipped .card-inner { transform: rotateY(180deg); }
+.card-front, .card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 12px; border: 1px solid #ddd; padding: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.card-front { background: #fff; }
+.card-back { background: #f0f0ea; transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; overflow-y: auto; }
+.card-name { font-size: 15px; font-weight: 600; color: #222; text-align: center; white-space: pre-line; }
+.card-hint { font-size: 11px; color: #aaa; margin-top: 8px; }
+.card-recipe { font-size: 11.5px; color: #444; line-height: 1.7; white-space: pre-wrap; }
+
+.recipe-card { background: #fdf8f2; border-radius: 20px; max-width: 520px; margin: 0 auto 32px; padding: 28px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.recipe-title { font-size: 22px; font-weight: 700; color: #2c1a0e; margin-bottom: 2px; }
+.recipe-sub { font-size: 11px; color: #b08060; letter-spacing: 2px; margin-bottom: 20px; }
+.section-label { font-size: 11px; font-weight: 700; color: #b08060; letter-spacing: 2px; margin-bottom: 10px; }
+.divider { border: none; border-top: 1.5px solid #e8ddd0; margin: 18px 0; }
+.ingredients-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 14px; }
+.ing-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: #fff; border-radius: 8px; border: 1px solid #ede5d8; }
+.ing-name { font-size: 12px; color: #444; }
+.ing-amount { font-size: 12px; font-weight: 600; color: #8b5e3c; white-space: nowrap; margin-left: 6px; }
+.steps { display: flex; flex-direction: column; gap: 11px; }
+.step { display: flex; gap: 11px; align-items: flex-start; }
+.step-num { min-width: 26px; height: 26px; background: #2c1a0e; color: #fdf8f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.step-text { font-size: 13px; line-height: 1.75; color: #333; }
+.step-note { display: inline-block; background: #fff3e0; color: #b06020; font-size: 11px; padding: 1px 7px; border-radius: 4px; margin-top: 4px; }
+.sub-title { font-size: 13px; font-weight: 700; color: #2c1a0e; margin: 16px 0 8px; padding-left: 8px; border-left: 3px solid #8b5e3c; }
+.empty-note { font-size: 13px; color: #aaa; text-align: center; padding: 40px 0; }
+
+/* 語言切換 */
+.ja { display: inline; }
+.zh { display: none; }
+body.zh-mode .ja { display: none; }
+body.zh-mode .zh { display: inline; }
+.ja-block { display: block; }
+.zh-block { display: none; }
+body.zh-mode .ja-block { display: none; }
+body.zh-mode .zh-block { display: block; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="lang-switch">
+    <button class="lang-btn active" onclick="setLang('ja',this)">日本語</button>
+    <button class="lang-btn" onclick="setLang('zh',this)">中文</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('drinks',this)">☕ <span class="ja">ドリンク</span><span class="zh">飲品</span></button>
+  <button class="tab-btn" onclick="switchTab('drink-prep',this)">🧋 <span class="ja">ドリンク備品</span><span class="zh">飲品備品</span></button>
+  <button class="tab-btn" onclick="switchTab('raw',this)">🍇 <span class="ja">生チーズケーキ</span><span class="zh">生乳酪蛋糕</span></button>
+  <button class="tab-btn" onclick="switchTab('taro',this)">🟣 <span class="ja">芋頭チーズケーキ</span><span class="zh">芋頭起司蛋糕</span></button>
+  <button class="tab-btn" onclick="switchTab('brownie',this)">🍫 <span class="ja">ブラウニー</span><span class="zh">布朗尼</span></button>
+  <button class="tab-btn" onclick="switchTab('dessert-prep',this)">🍮 <span class="ja">デザート備品</span><span class="zh">甜點備品</span></button>
+</div>
+
+<!-- ドリンク -->
+<div class="section active" id="tab-drinks">
+  <h1 class="ja-block">ドリンク学習カード</h1>
+  <h1 class="zh-block">飲品學習卡</h1>
+  <div class="bar">
+    <span class="count" id="counter">0 / 23</span>
+    <button class="reset" onclick="resetAll()"><span class="ja">すべて表に戻す</span><span class="zh">全部重置</span></button>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- ドリンク備品 -->
+<div class="section" id="tab-drink-prep">
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">抹茶クリーム</span><span class="zh">抹茶鮮奶油</span></div>
+    <div class="recipe-sub"><span class="ja">ドリンク備品</span><span class="zh">飲品備品</span></div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（35%）</span><span class="zh">鮮奶油（35%）</span></span><span class="ing-amount">250g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">抹茶パウダー</span><span class="zh">抹茶粉</span></span><span class="ing-amount">7g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">シロップ</span><span class="zh">糖漿</span></span><span class="ing-amount">25g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">お湯</span><span class="zh">熱水</span></span><span class="ing-amount">10g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">生クリーム 250g をカップに入れる。</span><span class="zh">鮮奶油 250g 放入杯中備用。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">ボウルに抹茶パウダー 7g を入れ、シロップ 25g を加えてよく混ぜる。</span><span class="zh">碗中放入抹茶粉 7g，加入糖漿 25g 攪拌均勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">お湯 10g を加えてダマがなくなるまで混ぜる。</span><span class="zh">加入熱水 10g，攪拌至無結塊。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">ゴムベラを使って抹茶液を生クリームに加える。</span><span class="zh">用橡皮刮刀將抹茶液加入鮮奶油中。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">ハンドブレンダー（またはミキサー）で泡立てる。</span><span class="zh">用手持攪拌機（或調理機）打發即完成。</span></div></div>
+    </div>
+  </div>
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">ベリージャム</span><span class="zh">莓果醬</span></div>
+    <div class="recipe-sub"><span class="ja">ドリンク備品</span><span class="zh">飲品備品</span></div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">チェリー（種抜き）</span><span class="zh">櫻桃（去籽）</span></span><span class="ing-amount">150g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ブルーベリー</span><span class="zh">藍莓</span></span><span class="ing-amount">100g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">いちご</span><span class="zh">草莓</span></span><span class="ing-amount">150g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">200g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">レモン汁</span><span class="zh">檸檬汁</span></span><span class="ing-amount">30g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">チェリーといちごをミキサーで粗く砕く。ブルーベリーはそのまま加える。</span><span class="zh">櫻桃和草莓先打碎。藍莓直接加入即可。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">全材料を鍋に入れ、強度6で沸騰させる。</span><span class="zh">所有材料放入鍋中，強度6煮到滾。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">沸騰したら強度3に下げ、さらに5分煮る。</span><span class="zh">滾後轉強度3，再煮5分鐘即完成。</span></div></div>
+    </div>
+  </div>
+</div>
+<div class="section" id="tab-dessert-prep">
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">デザート備品</span><span class="zh">甜點備品</span></div>
+    <div class="empty-note"><span class="ja">内容は準備中です。</span><span class="zh">內容整理中，敬請期待。</span></div>
+  </div>
+</div>
+
+<!-- 生チーズケーキ -->
+<div class="section" id="tab-raw">
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">クッキーベース</span><span class="zh">餅乾底</span></div>
+    <div class="recipe-sub"><span class="ja">7寸型共通</span><span class="zh">7寸模共用</span></div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">バター</span><span class="zh">奶油</span></span><span class="ing-amount">60g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">クッキー（砕いたもの）</span><span class="zh">餅乾（壓碎）</span></span><span class="ing-amount">120g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">バターをオーブンで溶かす。</span><span class="zh">奶油放烤箱融化。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">砕いたクッキーと合わせてよく混ぜる。</span><span class="zh">加入壓碎的餅乾拌勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">型に入れて平らに押し固める。</span><span class="zh">放入模具內壓平壓均勻。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja"><strong>160度</strong>のオーブンで<strong>9分</strong>焼き、完全に冷ます。</span><span class="zh">160度烤 <strong>9分鐘</strong>，取出放涼備用。</span></div></div>
+    </div>
+  </div>
+
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">ぶどう生チーズケーキ</span><span class="zh">葡萄生乳酪蛋糕</span></div>
+    <div class="recipe-sub">7寸型</div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">クリームチーズ</span><span class="zh">奶油乳酪</span></span><span class="ing-amount">300g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">40g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">牛乳</span><span class="zh">牛奶</span></span><span class="ing-amount">100g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ゼラチン</span><span class="zh">吉利丁片</span></span><span class="ing-amount">3枚</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（泡立て済み）</span><span class="zh">打發鮮奶油</span></span><span class="ing-amount">150g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ライチ酒</span><span class="zh">荔枝酒</span></span><span class="ing-amount">10g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">グリーングレープ</span><span class="zh">綠葡萄</span></span><span class="ing-amount"><span class="ja">適量</span><span class="zh">適量</span></span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">ゼラチンを氷水でふやかしておく。</span><span class="zh">吉利丁片泡冰水軟化備用。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">クリームチーズをやわらかくし、砂糖を加えて混ぜる。</span><span class="zh">乳酪軟化後加糖拌勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">牛乳をレンジで加熱し、ゼラチンを溶かす。チーズ生地に数回に分けて加え混ぜる。</span><span class="zh">牛奶微波加熱，加入吉利丁片溶解，分次加入乳酪糊拌勻。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">ライチ酒と泡立てた生クリームを加えて混ぜる。</span><span class="zh">加入荔枝酒與打發鮮奶油拌勻。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">型に流し入れ、グリーングレープを並べる。</span><span class="zh">倒入模具，擺上綠葡萄。</span></div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-text"><span class="ja">冷蔵庫で<strong>一晩</strong>冷やす。</span><span class="zh">冷藏<strong>一晚</strong>。</span></div></div>
+    </div>
+  </div>
+
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">バラとライチの生チーズケーキ</span><span class="zh">玫瑰荔枝生乳酪蛋糕</span></div>
+    <div class="recipe-sub"><span class="ja">7寸型・2層</span><span class="zh">7寸模・2層</span></div>
+    <div class="sub-title">🌹 <span class="ja">第1層：バラ風味</span><span class="zh">第一層：玫瑰</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">クリームチーズ</span><span class="zh">奶油乳酪</span></span><span class="ing-amount">150g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">20g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">バラシロップ</span><span class="zh">玫瑰糖漿</span></span><span class="ing-amount">30g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">牛乳＋バラの花びら</span><span class="zh">牛奶＋玫瑰花瓣</span></span><span class="ing-amount">70g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ゼラチン</span><span class="zh">吉利丁片</span></span><span class="ing-amount">1.5枚</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（泡立て済み）</span><span class="zh">打發鮮奶油</span></span><span class="ing-amount">80g</span></div>
+    </div>
+    <div class="sub-title">🍈 <span class="ja">第2層：ライチ風味</span><span class="zh">第二層：荔枝</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">クリームチーズ</span><span class="zh">奶油乳酪</span></span><span class="ing-amount">150g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">20g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ライチシロップ</span><span class="zh">荔枝糖漿</span></span><span class="ing-amount">25g</span></div>
+      <div class="ing-item" style="flex-direction:column;align-items:flex-start;gap:3px;"><span style="display:flex;justify-content:space-between;width:100%;"><span class="ing-name"><span class="ja">ライチ果汁</span><span class="zh">荔枝汁</span></span><span class="ing-amount"><span class="ja">適量</span><span class="zh">適量</span></span></span><span style="font-size:10px;color:#999;"><span class="ja">むいたライチから出た果汁をすべて加える</span><span class="zh">撥好荔枝產生的果汁全部加入</span></span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">牛乳</span><span class="zh">牛奶</span></span><span class="ing-amount">70g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ゼラチン</span><span class="zh">吉利丁片</span></span><span class="ing-amount">1.5枚</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（泡立て済み）</span><span class="zh">打發鮮奶油</span></span><span class="ing-amount">80g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ライチ（2周分）</span><span class="zh">荔枝（擺兩圈）</span></span><span class="ing-amount"><span class="ja">適量</span><span class="zh">適量</span></span></div>
+    </div>
+    <hr class="divider">
+    <div class="sub-title" style="margin-top:0">🌹 <span class="ja">第1層（バラ）から作る</span><span class="zh">先做第一層（玫瑰）</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">クリームチーズをやわらかくし、砂糖・バラシロップを加えて混ぜる。</span><span class="zh">乳酪軟化，加糖和玫瑰糖漿拌勻。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">牛乳にバラの花びらを入れてレンジで加熱。ゼラチンを溶かし、チーズ生地に分次加える。</span><span class="zh">牛奶加玫瑰花瓣微波加熱，加入吉利丁溶解，分次加入乳酪糊。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">食用色素で色を調整し、泡立てた生クリームを加えて混ぜる。</span><span class="zh">加色素調整顏色，加入打發鮮奶油拌勻。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">型に流し入れ、室温で待機。</span><span class="zh">倒入模具，室溫備用。</span></div></div>
+    </div>
+    <div class="sub-title">🍈 <span class="ja">第2層（ライチ）を作る</span><span class="zh">再做第二層（荔枝）</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">クリームチーズをやわらかくし、砂糖・ライチシロップを加えて混ぜる。ライチ果汁をすべて加える。</span><span class="zh">乳酪軟化，加糖與荔枝糖漿拌勻，加入全部荔枝汁。</span></div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-text"><span class="ja">牛乳を加熱しゼラチンを溶かし、チーズ生地に分次加える。</span><span class="zh">牛奶加熱，加入吉利丁溶解，分次加入乳酪糊。</span></div></div>
+      <div class="step"><div class="step-num">7</div><div class="step-text"><span class="ja">泡立てた生クリームを加えて混ぜ、第1層の上に流し込む。</span><span class="zh">加入打發鮮奶油拌勻，倒在第一層上。</span></div></div>
+      <div class="step"><div class="step-num">8</div><div class="step-text"><span class="ja">ライチを2周分並べ、冷蔵庫で<strong>一晩</strong>冷やす。</span><span class="zh">擺上兩圈荔枝，冷藏<strong>一晚</strong>。</span></div></div>
+    </div>
+  </div>
+
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">ベリーのレアチーズ</span><span class="zh">野莓生乳酪</span></div>
+    <div class="recipe-sub">7寸型</div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">クリームチーズ</span><span class="zh">奶油乳酪</span></span><span class="ing-amount">250g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">40g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">牛乳</span><span class="zh">牛奶</span></span><span class="ing-amount">100g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ゼラチン</span><span class="zh">吉利丁片</span></span><span class="ing-amount">3枚</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（泡立て済み）</span><span class="zh">打發鮮奶油</span></span><span class="ing-amount">130g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ベリージャム</span><span class="zh">莓果果醬</span></span><span class="ing-amount">150g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">クリームチーズをやわらかくし、砂糖を加えて混ぜる。</span><span class="zh">奶油乳酪軟化後加入砂糖拌勻。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">牛乳を電子レンジ（500W）で<strong>1分10秒</strong>加熱し、ふやかしたゼラチン3枚を加えて溶かす。</span><span class="zh">牛奶微波（500W）加熱 <strong>1分10秒</strong>，加入泡軟的吉利丁片3片攪拌溶解。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">チーズ生地に数回に分けて加え混ぜる。</span><span class="zh">分次拌入奶油乳酪中。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">泡立てた生クリームを加えて混ぜる。</span><span class="zh">加入打發鮮奶油拌勻。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">生地の半分を型に流し入れる。</span><span class="zh">將一半生乳酪倒入模具中。</span></div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-text"><span class="ja">残り半分にベリージャムを加えて混ぜる。</span><span class="zh">另一半加入莓果果醬拌勻。</span></div></div>
+      <div class="step"><div class="step-num">7</div><div class="step-text"><span class="ja">型に流し入れ、表面に模様をつける。</span><span class="zh">倒入模具中，上面做出花紋。</span></div></div>
+      <div class="step"><div class="step-num">8</div><div class="step-text"><span class="ja">ラップをかけ、冷蔵庫で<strong>一晩</strong>冷やす。</span><span class="zh">封保鮮膜，冷藏<strong>一晚</strong>。</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 芋頭 -->
+<div class="section" id="tab-taro">
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">クッキーベース</span><span class="zh">餅乾底</span></div>
+    <div class="recipe-sub"><span class="ja">6寸型</span><span class="zh">6寸模</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">バター</span><span class="zh">奶油</span></span><span class="ing-amount">50g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">クッキー（砕いたもの）</span><span class="zh">餅乾（壓碎）</span></span><span class="ing-amount">100g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">バターをオーブンで溶かす。</span><span class="zh">奶油放烤箱融化。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">砕いたクッキーと合わせてよく混ぜる。</span><span class="zh">加入壓碎的餅乾拌勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">型に入れて平らに押し固める。</span><span class="zh">放入模具內壓平壓均勻。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja"><strong>160度</strong>で<strong>9分</strong>焼き、冷ます。</span><span class="zh">160度烤 <strong>9分鐘</strong>，放涼備用。</span></div></div>
+    </div>
+  </div>
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">タロイモチーズケーキ</span><span class="zh">芋頭起司蛋糕</span></div>
+    <div class="recipe-sub">6寸型</div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">クリームチーズ</span><span class="zh">奶油乳酪</span></span><span class="ing-amount">200g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">35g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">タロイモあん</span><span class="zh">芋頭餡</span></span><span class="ing-amount">210g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">卵</span><span class="zh">雞蛋</span></span><span class="ing-amount">2個</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">コーンスターチ</span><span class="zh">玉米粉</span></span><span class="ing-amount">13g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">生クリーム（35%）</span><span class="zh">鮮奶油35%</span></span><span class="ing-amount">50g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">求肥（1周分）</span><span class="zh">求肥（擺一圈）</span></span><span class="ing-amount"><span class="ja">適量</span><span class="zh">適量</span></span></div>
+    </div>
+    <hr class="divider">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">クリームチーズをやわらかくし、砂糖を加えて混ぜる。タロイモあんを加えてさらに混ぜる。</span><span class="zh">乳酪軟化加糖拌勻，加入芋頭餡再拌。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">溶き卵を数回に分けて加え、その都度よく混ぜる。</span><span class="zh">蛋液分次加入，每次都要拌勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">コーンスターチを加えて混ぜる。</span><span class="zh">加入玉米粉拌勻。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">生クリームを加えて混ぜ、6寸型に流し入れる。</span><span class="zh">加入鮮奶油拌勻，倒入6寸模。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">求肥を1周並べる。</span><span class="zh">擺一圈求肥。</span></div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-text"><span class="ja"><strong>180度</strong>で<strong>40分</strong>焼き、向きを変えてさらに<strong>10分</strong>焼く。</span><span class="zh">180度烤 <strong>40分</strong>，換方向再烤 <strong>10分</strong>。</span></div></div>
+    </div>
+  </div>
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">タロイモあん</span><span class="zh">芋頭餡</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">生タロイモ（千切り）</span><span class="zh">生芋頭（切絲）</span></span><span class="ing-amount">250g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">タロイモシロップ（市販1袋）</span><span class="zh">芋頭蜜（市售1包）</span></span><span class="ing-amount">1袋</span></div>
+    </div>
+    <hr class="divider">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">生タロイモを千切りにし、600Wで1分30秒レンジ加熱→混ぜる。5〜6回繰り返す。<br><span class="step-note">※ラップを使う場合、取り出す際に熱気に注意</span></span><span class="zh">芋頭切絲，600W微波1分30秒後攪拌，重複5〜6次直到蒸熟。<br><span class="step-note">※若有包保鮮膜，每次取出掀開時小心熱氣燙傷</span></span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">タロイモとタロイモシロップをミキサーで攪拌する。</span><span class="zh">芋頭與芋頭蜜用均質機攪拌均勻。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">冷蔵庫で保存。</span><span class="zh">冷藏即可。</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ブラウニー -->
+<div class="section" id="tab-brownie">
+  <div class="recipe-card">
+    <div class="recipe-title"><span class="ja">ブラウニー</span><span class="zh">布朗尼</span></div>
+    <div class="recipe-sub"><span class="ja">150度 26分</span><span class="zh">150度 26分鐘</span></div>
+    <div class="sub-title"><span class="ja">チョコレート</span><span class="zh">巧克力</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">チョコチップ 計</span><span class="zh">巧克力豆 合計</span></span><span class="ing-amount">200g</span></div>
+      <div class="ing-item"><span class="ing-name">70%</span><span class="ing-amount">140g</span></div>
+      <div class="ing-item"><span class="ing-name">58%</span><span class="ing-amount">60g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">飾り用（各10g）</span><span class="zh">裝飾用（各10g）</span></span><span class="ing-amount">20g</span></div>
+    </div>
+    <div class="sub-title"><span class="ja">その他</span><span class="zh">其他</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">バター（室温）</span><span class="zh">奶油（室溫軟化）</span></span><span class="ing-amount">250g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">上白糖</span><span class="zh">上白糖</span></span><span class="ing-amount">200g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">卵（溶いておく）</span><span class="zh">雞蛋（先攪散）</span></span><span class="ing-amount">250g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">薄力粉</span><span class="zh">低筋麵粉</span></span><span class="ing-amount">120g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">ベーキングパウダー</span><span class="zh">泡打粉</span></span><span class="ing-amount">2g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">オーブンを<strong>150度</strong>に予熱する。</span><span class="zh">烤箱預熱 <strong>150度</strong>。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">チョコレートを湯煎か低ワットのレンジで溶かす。</span><span class="zh">巧克力隔水加熱或低瓦數微波融化，每次都要攪拌。</span><br><span class="step-note"><span class="ja">※レンジの場合：少しずつ加熱し都度混ぜる</span><span class="zh">※微波爐：少量多次，每次攪拌防焦</span></span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">室温に戻したバターに砂糖を加え、白くなるまで泡立てる。</span><span class="zh">奶油室溫軟化後加糖打發到變白。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">溶き卵をゆっくり少しずつ加えながら混ぜる。</span><span class="zh">蛋液慢慢分次加入拌勻。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">溶かしたチョコレートを加えて混ぜる。</span><span class="zh">加入融化的巧克力拌勻。</span></div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-text"><span class="ja">薄力粉とベーキングパウダーをふるい入れて混ぜる。</span><span class="zh">麵粉類過篩加入拌勻。</span></div></div>
+      <div class="step"><div class="step-num">7</div><div class="step-text"><span class="ja">クッキングシートを敷いた正方形型に流し入れ、飾り用チョコを散らす。</span><span class="zh">倒入鋪好烘焙紙的正方形烤模，撒上裝飾巧克力。</span></div></div>
+      <div class="step"><div class="step-num">8</div><div class="step-text"><span class="ja"><strong>150度</strong>で<strong>26分</strong>焼く。表面がカリッとしたら完成。</span><span class="zh"><strong>150度</strong>烤 <strong>26分</strong>，表面有脆脆的感覺即完成。</span></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setLang(lang, el) {
+  document.body.classList.toggle('zh-mode', lang === 'zh');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function switchTab(tab, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  el.classList.add('active');
+}
+
+const drinksJa = [
+  { name: "エスプレッソ", recipe: "1番ショット 32g" },
+  { name: "アメリカーノ", recipe: "【アイス】\n氷7〜8個 / 1番ショット / 冷水 120〜130g\n\n【ホット】\n1番ショット / お湯（80℃）220〜230g" },
+  { name: "カフェラテ", recipe: "【アイス】\n氷5〜6個 / 1番ショット / ミルク 150g\n\n【ホット】\n2番ショット / ミルク 195〜200g / ラテアート" },
+  { name: "カプチーノ", recipe: "1番ショット\nグラス（厚手）\nミルク 180g\nラテアート" },
+  { name: "ツァンツァン", recipe: "1番ショット\n冷凍グラス\nミルク 140g\nエスプレッソ 25g（上から注ぐ）" },
+  { name: "竹炭ラテ", recipe: "【アイス】\n氷5〜6個\n1番ショット＋竹炭パウダー 2g\nミルク 150g＋シロップ 5g\n\n【ホット】\n竹炭パウダー 2g / 2番ショット\nミルク 195〜200g / ラテアート" },
+  { name: "キャラメルラテ", recipe: "【アイス】\n氷5〜6個 / 1番ショット\nミルク 140g＋キャラメルシロップ 15g\n\n【ホット】\n2番ショット\nミルク 185g＋キャラメルシロップ 10g\nラテアート" },
+  { name: "黒糖ラテ", recipe: "【アイス】\nフォーム作り→冷蔵庫で休ませる\n氷5〜6個 / 1番ショット\nミルク 120g＋黒糖シロップ 15g\nフォームのせ＋黒糖パウダー\n\n【ホット】\n2番ショット\nミルク 185g＋黒糖シロップ 10g\nラテアート後、黒糖パウダー" },
+  { name: "コールドブリュー", recipe: "氷5〜6個\nコールドブリュー 160g" },
+  { name: "黒糖レモン\nアイスアメリカーノ", recipe: "1番ショット 25g（ピッチャーへ）\n黒糖ソース 25g\nレモンジュース 10g\n氷2個 / 冷水 80g\n→ミックス→氷5〜6個入りグラスへ\n黒糖パウダーをかける" },
+  { name: "冬瓜コールドブリュー", recipe: "氷5〜6個\n冬瓜茶 110g\nコールドブリュー 90g\nホイップクリーム 12g\n黒糖パウダー少々" },
+  { name: "抹茶ラテ", recipe: "【アイス】\n氷7〜8個\nミルク 150g＋シロップ 10g\n抹茶パウダー 3g＋お湯 30gで溶かして加える\n\n【ホット】\n抹茶パウダー 3g＋お湯 25gで溶かす\nミルク 190g＋シロップ 5g スチーム\nラテアート" },
+  { name: "ザクザク\nミルクティー", recipe: "ミルク 80g\n紅茶 120g\n黒糖 12g\n→フォームをしっかり作り\n表面をキャラメリゼ" },
+  { name: "アイスミルクティー", recipe: "フォーム作り→冷蔵庫で休ませる\n氷5〜6個\nミルク 60g / 紅茶 120g / 黒糖 15g\nフォームのせ＋黒糖パウダー" },
+  { name: "ココアオーツミルク", recipe: "【アイス】\n氷5〜6個\nココアミルク 200g\n\n【ホット】\nココアミルク 200g スチーム\nカップへ注ぎ\nココアパウダーをかける" },
+  { name: "アールグレイティー", recipe: "【アイス】\n紅茶 160g＋シロップ 15g\nミキサーで撹拌（氷2個）\n→氷5個入りグラスへ\n\n【ホット】\n茶葉 3g\nお湯（93℃）270g＋シロップ 15g\n5分抽出して濾す" },
+  { name: "焙じ茶ラテ", recipe: "【アイス】\n氷5〜6個 / 黒糖 15g / 牛乳 150ml\nほうじ茶パウダー 3g＋お湯 30ml\n→氷の上に注ぐ\n\n【ホット】\nほうじ茶パウダー 3g＋お湯 12ml\n黒糖 8g / 牛乳 195〜200ml スチーム\nラテアート" },
+  { name: "紅茶コーヒーラテ", recipe: "【ホット】\nエスプレッソ 20ml / 牛乳 90ml\n紅茶 90ml / 黒糖 15g → スチーム\n\n【アイス】\n氷5〜6個\n牛乳 70ml＋黒糖 15g\n紅茶 70ml（層を作る）\nフォーム 9分目\nエスプレッソ 32ml（上から）\n茶葉トッピング" },
+  { name: "オレンジアメリカーノ", recipe: "氷6〜7個\nオレンジジュース 150ml\nシロップ 10g → 混ぜる\nエスプレッソ 32ml（層になるように注ぐ）" },
+  { name: "スパークリング\nアメリカーノ", recipe: "氷6〜7個\n炭酸水 120ml\nシロップ 5g → 混ぜる\nエスプレッソ 32ml\n→ゆっくり注ぐ（重要！）" },
+  { name: "黒糖冬瓜ミルク", recipe: "氷6〜7個\n冬瓜茶 120ml\nミルクフォーム（上まで）\n黒糖パウダー トッピング" },
+  { name: "白桃ウーロン冷茶", recipe: "氷4個\n白桃ウーロン茶 200ml\nシロップ 15g → 混ぜる" },
+  { name: "ココナッツ抹茶", recipe: "【アイス】\n氷5個\nココナッツウォーター 160ml\n抹茶クリームをのせる" },
+];
+
+const drinksZh = [
+  { name: "義式濃縮", recipe: "1號萃取 32g" },
+  { name: "美式咖啡", recipe: "【冰】\n冰塊7〜8個 / 1號萃取 / 冷水 120〜130g\n\n【熱】\n1號萃取 / 熱水（80℃）220〜230g" },
+  { name: "拿鐵", recipe: "【冰】\n冰塊5〜6個 / 1號萃取 / 牛奶 150g\n\n【熱】\n2號萃取 / 牛奶 195〜200g / 拉花" },
+  { name: "卡布奇諾", recipe: "1號萃取\n厚玻璃杯\n牛奶 180g\n拉花" },
+  { name: "髒髒咖啡", recipe: "1號萃取\n冷凍杯\n牛奶 140g\n濃縮 25g（從上方注入）" },
+  { name: "竹炭拿鐵", recipe: "【冰】\n冰塊5〜6個\n1號萃取＋竹炭粉 2g\n牛奶 150g＋糖漿 5g\n\n【熱】\n竹炭粉 2g / 2號萃取\n牛奶 195〜200g / 拉花" },
+  { name: "焦糖拿鐵", recipe: "【冰】\n冰塊5〜6個 / 1號萃取\n牛奶 140g＋焦糖糖漿 15g\n\n【熱】\n2號萃取\n牛奶 185g＋焦糖糖漿 10g\n拉花" },
+  { name: "黑糖拿鐵", recipe: "【冰】\n製作奶泡→冷藏備用\n冰塊5〜6個 / 1號萃取\n牛奶 120g＋黑糖糖漿 15g\n放奶泡＋黑糖粉\n\n【熱】\n2號萃取\n牛奶 185g＋黑糖糖漿 10g\n拉花後撒黑糖粉" },
+  { name: "冷萃咖啡", recipe: "冰塊5〜6個\n冷萃咖啡 160g" },
+  { name: "黑糖檸檬\n冰美式", recipe: "1號萃取 25g（倒入量杯）\n黑糖醬 25g\n檸檬汁 10g\n冰塊2個 / 冷水 80g\n→混合→倒入裝有冰塊的杯中\n撒上黑糖粉" },
+  { name: "冬瓜冷萃", recipe: "冰塊5〜6個\n冬瓜茶 110g\n冷萃咖啡 90g\n鮮奶油 12g\n黑糖粉少許" },
+  { name: "抹茶拿鐵", recipe: "【冰】\n冰塊7〜8個\n牛奶 150g＋糖漿 10g\n抹茶粉 3g＋熱水 30g溶解後加入\n\n【熱】\n抹茶粉 3g＋熱水 25g溶解\n牛奶 190g＋糖漿 5g 打蒸奶\n拉花" },
+  { name: "焦糖脆脆\n奶茶", recipe: "牛奶 80g\n紅茶 120g\n黑糖 12g\n→打出扎實奶泡\n表面炙燒焦糖化" },
+  { name: "冰奶茶", recipe: "製作奶泡→冷藏備用\n冰塊5〜6個\n牛奶 60g / 紅茶 120g / 黑糖 15g\n放奶泡＋少許黑糖粉" },
+  { name: "可可燕麥奶", recipe: "【冰】\n冰塊5〜6個\n可可燕麥奶 200g\n\n【熱】\n可可燕麥奶 200g 打蒸奶\n倒入杯中\n撒可可粉" },
+  { name: "伯爵紅茶", recipe: "【冰】\n紅茶 160g＋糖漿 15g\n攪拌機打（加冰塊2個）\n→倒入裝有冰塊的杯中\n\n【熱】\n茶葉 3g\n熱水（93℃）270g＋糖漿 15g\n浸泡5分鐘後過濾" },
+  { name: "焙茶拿鐵", recipe: "【冰】\n冰塊5〜6個 / 黑糖 15g / 牛奶 150ml\n焙茶粉 3g＋熱水 30ml\n→注入冰上\n\n【熱】\n焙茶粉 3g＋熱水 12ml\n黑糖 8g / 牛奶 195〜200ml 打蒸奶\n拉花" },
+  { name: "紅茶咖啡拿鐵", recipe: "【熱】\n濃縮 20ml / 牛奶 90ml\n紅茶 90ml / 黑糖 15g → 打蒸奶\n\n【冰】\n冰塊5〜6個\n牛奶 70ml＋黑糖 15g\n紅茶 70ml（製造分層）\n奶泡 九分滿\n濃縮 32ml（從上方注入）\n茶葉 裝飾" },
+  { name: "橙香美式", recipe: "冰塊6〜7個\n柳橙汁 150ml\n糖漿 10g → 混合\n濃縮 32ml（製造分層注入）" },
+  { name: "氣泡美式", recipe: "冰塊6〜7個\n氣泡水 120ml\n糖漿 5g → 混合\n濃縮 32ml\n→緩慢注入（重要！）" },
+  { name: "黑糖冬瓜奶", recipe: "冰塊6〜7個\n冬瓜茶 120ml\n奶泡（加滿）\n黑糖粉 裝飾" },
+  { name: "白桃烏龍冷茶", recipe: "冰塊4個\n白桃烏龍茶 200ml\n糖漿 15g → 混合" },
+  { name: "椰子水抹茶", recipe: "【冰】\n冰塊5個\n椰子水 160ml\n放上抹茶鮮奶油" },
+];
+
+const grid = document.getElementById('grid');
+const counter = document.getElementById('counter');
+let flipped = new Set();
+let currentLang = 'ja';
+
+function updateCounter() { counter.textContent = flipped.size + ' / ' + drinksJa.length; }
+function resetAll() { flipped.clear(); document.querySelectorAll('.card-wrap').forEach(w => w.classList.remove('flipped')); updateCounter(); }
+
+function buildCards() {
+  grid.innerHTML = '';
+  flipped.clear();
+  const drinks = currentLang === 'ja' ? drinksJa : drinksZh;
+  drinks.forEach(function(d, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'card-wrap';
+    wrap.innerHTML = '<div class="card-inner"><div class="card-front"><div class="card-name">' + d.name + '</div><div class="card-hint">' + (currentLang === 'ja' ? 'タップで確認' : '點擊查看') + '</div></div><div class="card-back"><div class="card-recipe">' + d.recipe + '</div></div></div>';
+    wrap.addEventListener('click', function() { wrap.classList.toggle('flipped'); if (wrap.classList.contains('flipped')) flipped.add(i); else flipped.delete(i); updateCounter(); });
+    grid.appendChild(wrap);
+  });
+  updateCounter();
+}
+
+function setLang(lang, el) {
+  currentLang = lang;
+  document.body.classList.toggle('zh-mode', lang === 'zh');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  buildCards();
+}
+
+buildCards();
+</script>
+</body>
+</html>
