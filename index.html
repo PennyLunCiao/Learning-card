@@ -135,8 +135,23 @@ body.zh-mode .zh-block { display: block; }
 </div>
 <div class="section" id="tab-dessert-prep">
   <div class="recipe-card">
-    <div class="recipe-title"><span class="ja">デザート備品</span><span class="zh">甜點備品</span></div>
-    <div class="empty-note"><span class="ja">内容は準備中です。</span><span class="zh">內容整理中，敬請期待。</span></div>
+    <div class="recipe-title"><span class="ja">キャラメルクルミ</span><span class="zh">焦糖核桃</span></div>
+    <div class="recipe-sub"><span class="ja">デザート備品</span><span class="zh">甜點備品</span></div>
+    <div class="section-label">INGREDIENTS <span class="ja">材料</span><span class="zh">材料</span></div>
+    <div class="ingredients-grid">
+      <div class="ing-item"><span class="ing-name"><span class="ja">くるみ</span><span class="zh">核桃</span></span><span class="ing-amount">200g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">砂糖</span><span class="zh">糖</span></span><span class="ing-amount">60g</span></div>
+      <div class="ing-item"><span class="ing-name"><span class="ja">水</span><span class="zh">水</span></span><span class="ing-amount">30g</span></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label" style="margin-bottom:14px">STEPS <span class="ja">作り方</span><span class="zh">做法</span></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><span class="ja">くるみを手で小さく割る。</span><span class="zh">核桃用手撥成小塊。</span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><span class="ja">天板にオーブンシートを敷き、くるみを平らに並べて<strong>160度</strong>で<strong>7分</strong>焼く。</span><span class="zh">烤盤鋪上烤盤紙，平鋪核桃 <strong>160度</strong>烤 <strong>7分鐘</strong>。</span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><span class="ja">砂糖60gと水30gを鍋に入れ、IHコンロで加熱する。</span><span class="zh">糖 60g 加水 30g，用平底鍋和電磁爐加熱。</span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><span class="ja">糖液がうっすら黄金色になり細かい泡が出てきたら、焼いたくるみを加える。</span><span class="zh">煮到糖水呈微金黃色冒出細小泡泡，即可加入烤好的核桃。</span></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><span class="ja">火力4でキャラメル色になるまで炒める（<strong>約15〜20分</strong>）。</span><span class="zh">一路用4號火力炒製焦糖色，大概 <strong>15-20分鐘</strong>。</span></div></div>
+    </div>
   </div>
 </div>
 
@@ -377,6 +392,7 @@ const drinksJa = [
   { name: "黒糖冬瓜ミルク", recipe: "氷6〜7個\n冬瓜茶 120ml\nミルクフォーム（上まで）\n黒糖パウダー トッピング" },
   { name: "白桃ウーロン冷茶", recipe: "氷4個\n白桃ウーロン茶 200ml\nシロップ 15g → 混ぜる" },
   { name: "ココナッツ抹茶", recipe: "【アイス】\n氷5個\nココナッツウォーター 160ml\n抹茶クリームをのせる" },
+  { name: "アイスクリーム\nベリーソーダ", recipe: "ぽっちゃりカップを使用\nベリージャム 25g を入れる\n360度回してカップの内側にジャムをコーティング\n氷6〜7個 / 炭酸水 150g を加える\nストローとスプーンをセット\nバニラアイスをのせる\nベリージャム 5g をかけ、粉糖を少々振る" },
 ];
 
 const drinksZh = [
@@ -403,6 +419,7 @@ const drinksZh = [
   { name: "黑糖冬瓜奶", recipe: "冰塊6〜7個\n冬瓜茶 120ml\n奶泡（加滿）\n黑糖粉 裝飾" },
   { name: "白桃烏龍冷茶", recipe: "冰塊4個\n白桃烏龍茶 200ml\n糖漿 15g → 混合" },
   { name: "椰子水抹茶", recipe: "【冰】\n冰塊5個\n椰子水 160ml\n放上抹茶鮮奶油" },
+  { name: "冰淇淋莓果氣泡飲", recipe: "使用胖胖杯\n莓果醬加入 25g\n360度旋轉杯子讓果醬掛上杯壁\n加入冰塊6〜7顆 / 氣泡水 150g\n放上吸管和湯匙\n加入香草冰淇淋\n淋上莓果醬 5g，撒上一點糖粉" },
 ];
 
 const grid = document.getElementById('grid');
